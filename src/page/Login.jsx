@@ -1,6 +1,9 @@
 import {Button, FloatingLabel} from "react-bootstrap";
 import Form from "react-bootstrap/Form";
 import {useState} from "react";
+import {useLoginUser} from "../provider/LoginUserProvider.jsx";
+import {useNavigate} from "react-router";
+import {useMutation} from "@tanstack/react-query";
 async function loadLogin(loginUser) {
     const response=await fetch("http://localhost:9999/user/api/login.do", {
         method: "POST",
@@ -11,14 +14,29 @@ async function loadLogin(loginUser) {
     })
     if (!response.ok) throw new Error(response.statusText);
     const {jwt,user}= await response.json();
+
     console.log(jwt,user);
-    const expirationDate=new Date().getTime()+(1000*60*30); //지금부터 30분 뒤에 조회되는 jwt는 삭제
-    localStorage.setItem("jwt",JSON.stringify({data:jwt,expires:expirationDate}));
+    localStorage.setItem("jwt",jwt);
+    return JSON.parse(user);
 }
 
 export default function Login() {
     const [user, setUser] = useState({id: "", pw:""});
+    const [loginUser,setLoginUser]=useLoginUser();
+    const loginMutate=useMutation({
+        mutationFn:()=>loadLogin(user),
+        onSuccess:(result)=>{
+            setLoginUser(result)
+            alert("로그인 성공");
+            navigate("/");
+        },
+        onError:(err)=>{
+            console.log(err);
+            alert("아이디나 비밀번호를 확인하세요.")
+        }
+    })
 
+    const navigate = useNavigate();
     function inputHandler(e) {
         const{value,name} = e.target;
         setUser(preUser=>({
@@ -26,10 +44,9 @@ export default function Login() {
             [name]:value
         }))
     }
-
-    function signupHandler(e) {
+     async function signupHandler(e) {
         e.preventDefault();
-        loadLogin(user);
+        loginMutate.mutate()
 
     }
     return (
