@@ -2,8 +2,10 @@ import {Button, FloatingLabel} from "react-bootstrap";
 import Form from "react-bootstrap/Form";
 import {useState} from "react";
 import {useLoginUser} from "../provider/LoginUserProvider.jsx";
-import {useNavigate} from "react-router";
+import {Link, useNavigate} from "react-router";
 import {useMutation} from "@tanstack/react-query";
+import {jwtDecode} from "jwt-decode";
+import {GoogleLogin} from "@react-oauth/google";
 async function loadLogin(loginUser) {
     const response=await fetch("http://localhost:9999/user/api/login.do", {
         method: "POST",
@@ -63,6 +65,10 @@ export default function Login() {
                     <Button variant="outline-primary" type="submit">로그인</Button>
                 </p>
             </form>
+            <GoogleLogin onSuccess={(credentialResponse)=>{
+                const idToken=jwtDecode(credentialResponse.credential)
+                console.log(idToken);
+            }}/>
         </div>
     )
 }
