@@ -21,7 +21,24 @@ async function loadLogin(loginUser) {
     localStorage.setItem("jwt",jwt);
     return JSON.parse(user);
 }
+async function googleLogin(credentials) {
+    const idToken=jwtDecode(credentials.credential)
+    console.log(idToken);
+    const response=await fetch("http://localhost:9999/user/api/oauth/google/login.do", {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify(idToken)
+    })
+    if (!(response.ok || response.status === 409)) {
+        throw new Error(response.statusText);
+    }
+    const data= await response.json();
+    if (data.ok) {
+        localStorage.setItem("jwt",JSON.stringify(data["jwt"]));
+    }
+    return data;
 
+}
 export default function Login() {
     const [user, setUser] = useState({id: "", pw:""});
     const [loginUser,setLoginUser]=useLoginUser();
@@ -37,7 +54,24 @@ export default function Login() {
             alert("아이디나 비밀번호를 확인하세요.")
         }
     })
+    const googleLoginMutate=useMutation({
+        mutationFn:googleLogin,
+        onSuccess:(data)=>{
+            if(data["jwt"]){
+                alert("로그인 성공")
+                setLoginUser(data["user"]);
+            }else{
+                console.log(data);
+                confirm("구글계정으로 회원가입하겠습까?")
+                && navigate("/signup",{state:data["user"]});
+            }
+        },
+        onError:(error)=>{
+            console.log(error.message);
+            alert("로그인 실패")
 
+        }
+    })
     const navigate = useNavigate();
     function inputHandler(e) {
         const{value,name} = e.target;
@@ -65,10 +99,10 @@ export default function Login() {
                     <Button variant="outline-primary" type="submit">로그인</Button>
                 </p>
             </form>
-            <GoogleLogin onSuccess={(credentialResponse)=>{
-                const idToken=jwtDecode(credentialResponse.credential)
-                console.log(idToken);
-            }}/>
+            <GoogleLogin
+                onSuccess={(credentialResponse)=>{
+                    googleLoginMutate.mutate(credentialResponse);
+                }}/>
         </div>
     )
 }

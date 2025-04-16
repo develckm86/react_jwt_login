@@ -9,8 +9,6 @@ import Login from "./page/Login.jsx";
 import Signup from "./page/Signup.jsx";
 import {useLoginUser} from "./provider/LoginUserProvider.jsx";
 import Logout from "./page/Logout.jsx";
-import {GoogleLogin} from "@react-oauth/google";
-import {jwtDecode} from "jwt-decode";
 
 function App() {
 
