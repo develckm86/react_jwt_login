@@ -3,15 +3,47 @@ import HeaderNav from "./component/HeaderNav.jsx";
 import Home from "./page/Home.jsx";
 import UserList from "./page/user/UserList.jsx";
 import BoardList from "./page/board/BoardList.jsx";
-import AdminUserList from "./page/admin/user/AdminUserList.jsx";
+import AdminUserList, {authFetch} from "./page/admin/user/AdminUserList.jsx";
 import AdminBoardList from "./page/admin/board/AdminBoardList.jsx";
 import Login from "./page/Login.jsx";
 import Signup from "./page/Signup.jsx";
 import {useLoginUser} from "./provider/LoginUserProvider.jsx";
 import Logout from "./page/Logout.jsx";
+import {useQuery} from "@tanstack/react-query";
 
+async function checkLoginUser(){
+    const jwt=localStorage.getItem("jwt");
+    if(!jwt){return null;}
+    try {
+        const resp=await authFetch("http://localhost:9999/user/api/check.do");
+        const {user,jwt}=await resp.json();
+        console.log(user,jwt);
+        localStorage.setItem("jwt",jwt); //만료시간 연장
+        return user;
+    }catch (e){ //만료된 유저
+        console.log(e);
+        localStorage.removeItem("jwt");
+        throw new Error(e);
+    }
+}
 function App() {
+    const [,setLoginUser]=useLoginUser();
+    useQuery({
+        queryFn:async ()=>{
+            try {
+                const user=await checkLoginUser()
+                console.log(user);
+                setLoginUser(user);
+                return user;
+            }catch (e){
+                setLoginUser(null);
+                console.log(e);
 
+            }
+        },
+        queryKey:["loginUser"],
+        retry:1,
+    });
   return (
         <BrowserRouter>
           <HeaderNav/>

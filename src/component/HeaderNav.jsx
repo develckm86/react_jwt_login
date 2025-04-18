@@ -4,6 +4,7 @@ import Navbar from 'react-bootstrap/Navbar';
 import NavDropdown from 'react-bootstrap/NavDropdown';
 import {Link, useLocation} from "react-router";
 import {useLoginUser} from "../provider/LoginUserProvider.jsx";
+import {Image} from "react-bootstrap";
 
 export default function HeaderNav() {
     const [user]=useLoginUser();
@@ -23,7 +24,10 @@ export default function HeaderNav() {
                         </Nav>
                         {user ?
                             <Nav>
-                                <Nav.Link as={Link} to={`/user/${user.id}/detail`} >{user.name}({user.username})</Nav.Link>
+                                <Nav.Link as={Link} to={`/user/${user.id}/detail`} >
+                                    { user.profile && <Image src={user.profile} roundedCircle width={30} height={30} className="me-2"/>}
+                                    {user.name}({user.id})
+                                </Nav.Link>
                                 <Nav.Link as={Link} to="/logout" >로그아웃</Nav.Link>
                             </Nav> :
                             <Nav>

@@ -6,6 +6,7 @@ import {Link, useNavigate} from "react-router";
 import {useMutation} from "@tanstack/react-query";
 import {jwtDecode} from "jwt-decode";
 import {GoogleLogin} from "@react-oauth/google";
+
 async function loadLogin(loginUser) {
     const response=await fetch("http://localhost:9999/user/api/login.do", {
         method: "POST",
@@ -14,12 +15,13 @@ async function loadLogin(loginUser) {
         },
         body: JSON.stringify(loginUser),
     })
-    if (!response.ok) throw new Error(response.statusText);
+    if (!response.ok){
+        throw new Error(response.statusText);
+    }
     const {jwt,user}= await response.json();
-
     console.log(jwt,user);
     localStorage.setItem("jwt",jwt);
-    return JSON.parse(user);
+    return user;
 }
 async function googleLogin(credentials) {
     const idToken=jwtDecode(credentials.credential)
@@ -33,8 +35,9 @@ async function googleLogin(credentials) {
         throw new Error(response.statusText);
     }
     const data= await response.json();
-    if (data.ok) {
-        localStorage.setItem("jwt",JSON.stringify(data["jwt"]));
+    const {jwt,user}=data;
+    if (jwt) {
+        localStorage.setItem("jwt",JSON.stringify(jwt));
     }
     return data;
 
@@ -45,7 +48,8 @@ export default function Login() {
     const loginMutate=useMutation({
         mutationFn:()=>loadLogin(user),
         onSuccess:(result)=>{
-            setLoginUser(result)
+            console.log(result);
+            setLoginUser(()=>result)
             alert("로그인 성공");
             navigate("/");
         },
@@ -57,13 +61,15 @@ export default function Login() {
     const googleLoginMutate=useMutation({
         mutationFn:googleLogin,
         onSuccess:(data)=>{
-            if(data["jwt"]){
-                alert("로그인 성공")
-                setLoginUser(data["user"]);
+            const {jwt,user}=data;
+            if(jwt){
+                alert("로그인 성공");
+                setLoginUser(user);
+                navigate("/");
             }else{
-                console.log(data);
+                console.log(user);
                 confirm("구글계정으로 회원가입하겠습까?")
-                && navigate("/signup",{state:data["user"]});
+                && navigate("/signup",{state:user});
             }
         },
         onError:(error)=>{

@@ -1,7 +1,7 @@
 export default function Home(){
     return (
-        <>
-            <h1>홈입니다.</h1>
-        </>
+        <div className={ "container"}>
+            <h1 className={"mt-5"}>홈입니다.</h1>
+        </div>
     )
 }
